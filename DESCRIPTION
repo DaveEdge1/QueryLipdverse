@@ -13,3 +13,4 @@ Depends:
     R (>= 2.10)
 URL: https://github.com/DaveEdge1/QueryLipdverse
 BugReports: https://github.com/DaveEdge1/QueryLipdverse/issues
+RoxygenNote: 7.2.1
