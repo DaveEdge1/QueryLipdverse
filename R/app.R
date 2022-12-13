@@ -15,6 +15,8 @@ library(rnaturalearthdata)
 # Define server logic to summarize and view selected dataset ----
 server <- function(input, output) {
 
+  queryTable <- lipdR:::newQueryTable()
+
   world <- ne_countries(scale = "medium", returnclass = "sf")
 
   D<-reactive({
