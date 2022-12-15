@@ -28,8 +28,8 @@ server <- function(input, output) {
                              input$max.lat,
                              input$min.lon,
                              input$max.lon),
-                   age.min = input$age.min,
-                   age.max = input$age.max,
+                   age.min = NULL,
+                   age.max = NULL,
                    pub.info = NULL,
                    country = NULL,
                    continent = NULL,
@@ -145,13 +145,13 @@ ui <- fluidPage(
                    label = "max.lon:",
                    value = 180),
 
-      numericInput(inputId = "age.min",
-                   label = "age.min:",
-                   value = NULL),
-
-      numericInput(inputId = "age.max",
-                   label = "age.max:",
-                   value = NULL),
+      # numericInput(inputId = "age.min",
+      #              label = "age.min:",
+      #              value = NULL),
+      #
+      # numericInput(inputId = "age.max",
+      #              label = "age.max:",
+      #              value = NULL),
 
 
       # Input: Numeric entry for number of obs to view ----
