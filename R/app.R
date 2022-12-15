@@ -22,14 +22,14 @@ server <- function(input, output) {
   D<-reactive({
     queryLipdverse(variable.name = input$variable.name,
                    archive.type = input$archiveType,
-                   paleo.proxy = NULL,
-                   paleo.units = NULL,
+                   paleo.proxy = input$paleo.proxy,
+                   paleo.units = input$paleo.units,
                    coord = c(input$min.lat,
                              input$max.lat,
                              input$min.lon,
                              input$max.lon),
-                   age.min = NULL,
-                   age.max = NULL,
+                   age.min = input$age.min,
+                   age.max = input$age.max,
                    pub.info = NULL,
                    country = NULL,
                    continent = NULL,
@@ -144,6 +144,14 @@ ui <- fluidPage(
       numericInput(inputId = "max.lon",
                    label = "max.lon:",
                    value = 180),
+
+      numericInput(inputId = "age.min",
+                   label = "age.min:",
+                   value = NULL),
+
+      numericInput(inputId = "age.max",
+                   label = "age.max:",
+                   value = NULL),
 
 
       # Input: Numeric entry for number of obs to view ----
