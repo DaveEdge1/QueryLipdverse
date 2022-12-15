@@ -15,9 +15,10 @@ library(rnaturalearthdata)
 # Define server logic to summarize and view selected dataset ----
 server <- function(input, output) {
 
-  queryTable <- lipdR:::newQueryTable()
+  #queryTable <- lipdR:::newQueryTable()
 
-  world <- ne_countries(scale = "medium", returnclass = "sf")
+  #world <- ne_countries(scale = "medium", returnclass = "sf")
+  world <- map_data("world")
 
   D<-reactive({
     queryLipdverse(variable.name = input$variable.name,
@@ -69,8 +70,12 @@ server <- function(input, output) {
   #newColor <- observe(input$pointColor)
 
   output$plot2 <- renderPlot({
-    ggplot(data = world) +
-      geom_sf() +
+    ggplot(data=world, aes(x = long, y = lat, group = group)) +
+      geom_polygon(fill = "white", colour = "black") +
+      coord_map(
+        #projection = "mercator", #orientation = c(0, 90, 0),
+        xlim = NULL,
+        ylim = NULL)+
       geom_point(data = D(), inherit.aes = FALSE,
                  mapping = aes(x=as.numeric(geo_longitude),
                                y=as.numeric(geo_latitude),
