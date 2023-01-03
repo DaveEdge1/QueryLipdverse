@@ -25,10 +25,10 @@ server <- function(input, output) {
                    archive.type = input$archiveType,
                    paleo.proxy = input$paleo.proxy,
                    paleo.units = input$paleo.units,
-                   coord = c(input$min.lat,
-                             input$max.lat,
-                             input$min.lon,
-                             input$max.lon),
+                   coord = c(ymin(),
+                             ymax(),
+                             xmin(),
+                             xmax()),
                    age.min = NULL,
                    age.max = NULL,
                    pub.info = NULL,
@@ -54,18 +54,25 @@ server <- function(input, output) {
     print(tibble(D()), n=input$obs)
   })
 
-  yMin <- reactive({
-    min(D()$geo_latitude)
-  })
-  yMax <- reactive({
-    max(D()$geo_latitude)
-  })
-  xMin <- reactive({
-    min(D()$geo_longitude)
-  })
-  xMax <- reactive({
-    max(D()$geo_longitude)
-  })
+  # yMin <- reactive({
+  #   min(D()$geo_latitude)
+  # })
+  # yMax <- reactive({
+  #   max(D()$geo_latitude)
+  # })
+  # xMin <- reactive({
+  #   min(D()$geo_longitude)
+  # })
+  # xMax <- reactive({
+  #   max(D()$geo_longitude)
+  # })
+
+  # world <- reactive({
+  #   world1[world1$lat > input$min.lat &
+  #           world1$lat < input$max.lat &
+  #           world1$long > input$min.lon &
+  #           world1$long < input$max.lon,]
+  # })
 
   #newColor <- observe(input$pointColor)
 
@@ -74,14 +81,14 @@ server <- function(input, output) {
       geom_polygon(fill = "white", colour = "black") +
       coord_map(
         #projection = "mercator", #orientation = c(0, 90, 0),
-        xlim = NULL,
-        ylim = NULL)+
+        xlim = c(xmin(),xmax()),
+        ylim = c(ymin(),ymax()))+
       geom_point(data = D(), inherit.aes = FALSE,
                  mapping = aes(x=as.numeric(geo_longitude),
                                y=as.numeric(geo_latitude),
                                color=get(input$pointColor))) +
-      scale_y_continuous(limits = c(yMin(),yMax())) +
-      scale_x_continuous(limits = c(xMin(),xMax())) +
+      scale_y_continuous(limits = c(ymin(),ymax())) +
+      scale_x_continuous(limits = c(xmin(),xmax())) +
       xlab("") +
       ylab("") +
       theme(legend.title = element_blank())
@@ -100,6 +107,28 @@ server <- function(input, output) {
       writeLipd(readLipd(D()))
     }
   )
+
+  x_range <- function(e) {
+    if(is.null(e)) return(c(-180,180))
+    c(round(e$xmin, 1), round(e$xmax, 1))
+  }
+
+  y_range <- function(e) {
+    if(is.null(e)) return(c(-90,90))
+    c(round(e$ymin, 1), round(e$ymax, 1))
+  }
+
+  #output$xmin <- reactive({x_range(input$plot_brush)[1]})
+
+  xmin <- reactive({x_range(input$plot_brush)[1]})
+  xmax <- reactive({x_range(input$plot_brush)[2]})
+
+  #output$ymin <- reactive({y_range(input$plot_brush)[1]})
+
+  ymin <- reactive({y_range(input$plot_brush)[1]})
+  ymax <- reactive({y_range(input$plot_brush)[2]})
+
+
 
 }
 
@@ -172,13 +201,14 @@ ui <- fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
 
-      plotOutput("plot2"),
+      plotOutput("plot2",
+                 brush = "plot_brush"),
 
       selectInput("pointColor", "Select variable for coloring points",
                   choices =c(names(queryTable))),
       #c(verbatimTextOutput("summaryHeaders")),
 
-      verbatimTextOutput("summary2"),
+      verbatimTextOutput("summary2")
 
 
     )
