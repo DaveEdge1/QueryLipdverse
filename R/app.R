@@ -78,17 +78,20 @@ server <- function(input, output) {
 
   output$plot2 <- renderPlot({
     ggplot(data=world, aes(x = long, y = lat, group = group)) +
-      geom_polygon(fill = "white", colour = "black") +
-      coord_map(
-        #projection = "mercator", #orientation = c(0, 90, 0),
-        xlim = c(xmin(),xmax()),
-        ylim = c(ymin(),ymax()))+
+      geom_polygon(color="black", fill="white") +
+      # coord_map(
+      #   projection = "mercator", #orientation = c(0, 90, 0),
+      #   xlim = c(xmin(),xmax()),
+      #   ylim = c(ymin(),ymax())
+      #   )+
+      coord_cartesian(        xlim = c(xmin(),xmax()),
+                              ylim = c(ymin(),ymax()))+
       geom_point(data = D(), inherit.aes = FALSE,
                  mapping = aes(x=as.numeric(geo_longitude),
                                y=as.numeric(geo_latitude),
                                color=get(input$pointColor))) +
-      scale_y_continuous(limits = c(ymin(),ymax())) +
-      scale_x_continuous(limits = c(xmin(),xmax())) +
+      # scale_y_continuous(limits = c(ymin(),ymax())) +
+      # scale_x_continuous(limits = c(xmin(),xmax())) +
       xlab("") +
       ylab("") +
       theme(legend.title = element_blank())
