@@ -3,7 +3,7 @@
 #' @param port
 #'
 #' @export
-startQuery <- function(port=8383) {
+startQueryApp <- function(port=8383) {
   shiny::runApp(host = getOption("shiny.host","0.0.0.0"),
                 port = port,
                 appDir = system.file('shiny', package='QueryLipdverse'))
