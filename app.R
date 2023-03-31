@@ -54,9 +54,6 @@ server <- function(input, output) {
     print(tibble(D()), n=input$obs)
   })
 
-  output$summary3 <- renderPrint({
-    print(class(D()))
-  })
 
   # yMin <- reactive({
   #   min(D()$geo_latitude)
@@ -108,10 +105,28 @@ server <- function(input, output) {
   # Downloadable csv of selected dataset ----
   output$downloadData <- downloadHandler(
     filename = function() {
-      paste("newLIPD", ".zip", sep = "")
+      paste("newLIPD", Sys.time(), ".zip", sep = "")
     },
     content = function(file) {
-      writeLipd(readLipd(D()))
+      writeLipd(readLipd(D()), file)
+
+
+      owd <- setwd(tempdir())
+      on.exit(setwd(owd))
+      files <- NULL;
+
+      outputData <- readLipd(D())
+
+      #loop through the sheets
+      for (i in 1:length(outputData)){
+        #write each sheet to a csv file, save the name
+        fileName <- paste(outputData[[i]]$dataSetName,".lpd",sep = "")
+        writeLipd(D = outputData[i], path = fileName)
+        files <- c(fileName,files)
+        message(fileName)
+      }
+      #create the zip file
+      zip(file,files)
     }
   )
 
@@ -158,9 +173,9 @@ ui <- fluidPage(
                 label = "variable.name:",
                 value = NULL),
 
-      textInput(inputId = "archiveType",
+      selectInput(inputId = "archiveType",
                 label = "archiveType:",
-                value = NULL),
+                choices = queryTable$archiveType),
 
       textInput(inputId = "paleo.proxy",
                 label = "paleo.proxy:",
@@ -197,7 +212,8 @@ ui <- fluidPage(
                  brush = "plot_brush"),
 
       selectInput("pointColor", "Select variable for coloring points",
-                  choices =c(names(queryTable))),
+                  choices =c(names(queryTable)),
+                  selected = "archiveType"),
       #c(verbatimTextOutput("summaryHeaders")),
 
       verbatimTextOutput("summary2"),

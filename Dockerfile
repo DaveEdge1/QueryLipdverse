@@ -6,4 +6,4 @@ RUN Rscript -e "install.packages('shiny')"
 ADD . /app
 
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/app')"]
+CMD ["R", "-e", "shiny::runApp('/app', port=3838)"]
