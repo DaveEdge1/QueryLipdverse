@@ -54,6 +54,10 @@ server <- function(input, output) {
     print(tibble(D()), n=input$obs)
   })
 
+  output$summary3 <- renderPrint({
+    print(class(D()))
+  })
+
   # yMin <- reactive({
   #   min(D()$geo_latitude)
   # })
@@ -166,21 +170,6 @@ ui <- fluidPage(
                 label = "paleo.units:",
                 value = NULL),
 
-      numericInput(inputId = "min.lat",
-                   label = "min.lat:",
-                   value = -90),
-
-      numericInput(inputId = "max.lat",
-                   label = "max.lat:",
-                   value = 90),
-
-      numericInput(inputId = "min.lon",
-                   label = "min.lon:",
-                   value = -180),
-
-      numericInput(inputId = "max.lon",
-                   label = "max.lon:",
-                   value = 180),
 
       # numericInput(inputId = "age.min",
       #              label = "age.min:",
@@ -211,11 +200,14 @@ ui <- fluidPage(
                   choices =c(names(queryTable))),
       #c(verbatimTextOutput("summaryHeaders")),
 
-      verbatimTextOutput("summary2")
+      verbatimTextOutput("summary2"),
+
+      verbatimTextOutput("summary3")
 
 
     )
   )
 )
 
-shinyApp(ui, server)
+app <- shinyApp(ui = ui, server = server)
+runApp(app, port = 3880, launch.browser = FALSE)
