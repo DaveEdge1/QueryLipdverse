@@ -8,7 +8,7 @@ theme_set(theme_bw())
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
-
+library(shinysky)
 
 
 
@@ -173,7 +173,7 @@ ui <- fluidPage(
                 label = "variable.name:",
                 value = NULL),
 
-      selectInput(inputId = "archiveType",
+      select2Input(inputId = "archiveType",
                 label = "archiveType:",
                 choices = queryTable$archiveType),
 
