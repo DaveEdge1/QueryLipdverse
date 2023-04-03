@@ -9,6 +9,7 @@ library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(shinycssloaders)
+library(DT)
 
 
 
@@ -54,8 +55,8 @@ server <- function(input, output, session) {
   })
 
 
-  output$summary2 <- renderPrint({
-    print(tibble(D()), n=input$obs)
+  output$summary2 <- DT::renderDataTable({
+    data.frame(D()[,c(names(D())[14],names(D())[-14])])
   })
 
 
@@ -83,7 +84,7 @@ server <- function(input, output, session) {
 
   output$plot <- renderPlot({
     ggplot(data=world, aes(x = long, y = lat, group = group)) +
-      geom_polygon(color="black", fill="white") +
+      geom_polygon(color="black", fill=alpha("grey50", 0.2)) +
       # coord_map(
       #   projection = "mercator", #orientation = c(0, 90, 0),
       #   xlim = c(xmin(),xmax()),
@@ -107,6 +108,18 @@ server <- function(input, output, session) {
 
 
   # Downloadable csv of selected dataset ----
+  output$SummaryCSV <- downloadHandler(
+    filename = function() {
+      paste("LiPDsummary", Sys.time(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(data.frame(D()[,c(names(D())[14],names(D())[-14])]), file)
+
+    }
+  )
+
+
+  #download zipped lpd files
   output$ZippedLipdData <- downloadHandler(
     filename = function() {
       paste("newLIPD", Sys.time(), ".zip", sep = "")
@@ -250,7 +263,9 @@ ui <- fluidPage(
                    value = 10),
 
       # Button
-      downloadButton("ZippedLipdData", "Download (Zip of .lpd files)")
+      downloadButton("ZippedLipdData", "Download data (Zip of .lpd files)"),
+      downloadButton("SummaryCSV", "Download summary table (.csv)")
+
 
     ),
 
@@ -279,7 +294,8 @@ ui <- fluidPage(
 
       #c(verbatimTextOutput("summaryHeaders")),
 
-      verbatimTextOutput("summary2")
+
+      DT::dataTableOutput("summary2")
 
       #verbatimTextOutput("numTimeSeries")
 
