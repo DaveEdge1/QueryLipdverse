@@ -8,12 +8,12 @@ theme_set(theme_bw())
 library(sf)
 library(rnaturalearth)
 library(rnaturalearthdata)
-library(shinysky)
+library(shinycssloaders)
 
 
 
 # Define server logic to summarize and view selected dataset ----
-server <- function(input, output) {
+server <- function(input, output, session) {
 
   #queryTable <- lipdR:::newQueryTable()
 
@@ -29,25 +29,29 @@ server <- function(input, output) {
                              ymax(),
                              xmin(),
                              xmax()),
-                   age.min = NULL,
-                   age.max = NULL,
+                   age.min = input$min.age,
+                   age.max = input$max.age,
                    pub.info = NULL,
                    country = NULL,
                    continent = NULL,
                    ocean = FALSE,
-                   seasonality = NULL,
+                   seasonality = input$interpretation.seasonality,
                    season.not = NULL,
-                   interp.vars = NULL,
+                   interp.vars = input$interpretation.variable,
                    interp.details = NULL,
-                   compilation = NULL,
+                   compilation = input$compilation,
                    verbose = FALSE,
                    skip.update = FALSE
     )
   })
 
-  # output$summaryHeaders <- reactive({
-  #   c(names(D()))
-  # })
+  output$numTimeSeries <- reactive({
+    nrow(D())
+  })
+
+  output$numDatasets <- reactive({
+    length(unique(D()$dataSetName))
+  })
 
 
   output$summary2 <- renderPrint({
@@ -77,7 +81,7 @@ server <- function(input, output) {
 
   #newColor <- observe(input$pointColor)
 
-  output$plot2 <- renderPlot({
+  output$plot <- renderPlot({
     ggplot(data=world, aes(x = long, y = lat, group = group)) +
       geom_polygon(color="black", fill="white") +
       # coord_map(
@@ -87,7 +91,7 @@ server <- function(input, output) {
       #   )+
       coord_cartesian(        xlim = c(xmin(),xmax()),
                               ylim = c(ymin(),ymax()))+
-      geom_point(data = D(), inherit.aes = FALSE,
+      geom_jitter(data = D(), inherit.aes = FALSE,
                  mapping = aes(x=as.numeric(geo_longitude),
                                y=as.numeric(geo_latitude),
                                color=get(input$pointColor))) +
@@ -103,7 +107,7 @@ server <- function(input, output) {
 
 
   # Downloadable csv of selected dataset ----
-  output$downloadData <- downloadHandler(
+  output$ZippedLipdData <- downloadHandler(
     filename = function() {
       paste("newLIPD", Sys.time(), ".zip", sep = "")
     },
@@ -142,13 +146,29 @@ server <- function(input, output) {
 
   #output$xmin <- reactive({x_range(input$plot_brush)[1]})
 
-  xmin <- reactive({x_range(input$plot_brush)[1]})
-  xmax <- reactive({x_range(input$plot_brush)[2]})
+  xmin <- reactive({x_range(input$plotBrush)[1]})
+  xmax <- reactive({x_range(input$plotBrush)[2]})
 
   #output$ymin <- reactive({y_range(input$plot_brush)[1]})
 
-  ymin <- reactive({y_range(input$plot_brush)[1]})
-  ymax <- reactive({y_range(input$plot_brush)[2]})
+  ymin <- reactive({y_range(input$plotBrush)[1]})
+  ymax <- reactive({y_range(input$plotBrush)[2]})
+
+  brush <- NULL
+  makeReactiveBinding("brush")
+
+  observeEvent(input$plotBrush, {
+    brush <<- input$plotBrush
+  })
+
+  observeEvent(input$clearBrush, {
+    session$resetBrush("plotBrush")
+  })
+
+  observeEvent(input$resetPlot, {
+    session$resetBrush("plotBrush")
+    brush <<- NULL
+  })
 
 
 
@@ -166,24 +186,53 @@ ui <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
 
+
       # Input: Text for providing a caption ----
       # Note: Changes made to the caption in the textInput control
       # are updated in the output area immediately as you type
-      textInput(inputId = "variable.name",
+      selectizeInput(inputId = "variable.name",
                 label = "variable.name:",
-                value = NULL),
+                choices = unique(queryTable$paleoData_variableName),
+                multiple=TRUE),
 
-      select2Input(inputId = "archiveType",
-                label = "archiveType:",
-                choices = queryTable$archiveType),
+      selectizeInput(inputId = "archiveType",
+                label = "Archive Type:",
+                choices = unique(queryTable$archiveType),
+                multiple=TRUE),
 
-      textInput(inputId = "paleo.proxy",
-                label = "paleo.proxy:",
-                value = NULL),
+      selectizeInput(inputId = "paleo.proxy",
+                label = "Paleo Proxy:",
+                choices = unique(queryTable$paleoData_proxy),
+                multiple=TRUE),
 
-      textInput(inputId = "paleo.units",
-                label = "paleo.units:",
-                value = NULL),
+      selectizeInput(inputId = "paleo.units",
+                label = "Paleo Units:",
+                choices = unique(queryTable$paleoData_units),
+                multiple=TRUE),
+      selectizeInput(inputId = "compilation",
+                     label = "Compilation:",
+                     choices = unique(queryTable$paleoData_mostRecentCompilations),
+                     multiple=TRUE),
+      selectizeInput(inputId = "interpretation.variable",
+                     label = "Interpretation Variable:",
+                     choices = unique(queryTable$interp_Vars),
+                     multiple=TRUE),
+      selectizeInput(inputId = "interpretation.seasonality",
+                     label = "Interpretation Seasonality:",
+                     choices = unique(queryTable$interpretation1_seasonality),
+                     multiple=TRUE),
+      numericInput(inputId = "min.age",
+                   label = "Min Age (BP)",
+                   value = 4600000000,
+                   min = -100,
+                   max = 4600000000),
+      numericInput(inputId = "max.age",
+                   label = "Max Age (BP)",
+                   value = -100,
+                   min = -100,
+                   max = 4600000000),
+
+
 
 
       # numericInput(inputId = "age.min",
@@ -201,24 +250,40 @@ ui <- fluidPage(
                    value = 10),
 
       # Button
-      downloadButton("downloadData", "Download (must use app in browser)")
+      downloadButton("ZippedLipdData", "Download (Zip of .lpd files)")
 
     ),
 
     # Main panel for displaying outputs ----
     mainPanel(
 
-      plotOutput("plot2",
-                 brush = "plot_brush"),
+      fluidRow(
+        column(4,
+               p("Unique time series in query: ", textOutput(outputId = "numTimeSeries", inline=T)),
+               p("Unique sites in query: ", textOutput(outputId = "numDatasets", inline=T)),),
+        column(4,
+               actionButton("resetPlot", "Reset plot")),
+        column(4,
+               selectInput("pointColor", "Select variable for coloring points",
+                           choices =c(names(queryTable)),
+                           selected = "archiveType")),
+        ),
 
-      selectInput("pointColor", "Select variable for coloring points",
-                  choices =c(names(queryTable)),
-                  selected = "archiveType"),
+      withSpinner(plotOutput("plot",
+                 brush = brushOpts(
+                   id = "plotBrush",
+                   delay = 5000
+                   )
+                 )),
+
+
       #c(verbatimTextOutput("summaryHeaders")),
 
-      verbatimTextOutput("summary2"),
+      verbatimTextOutput("summary2")
 
-      verbatimTextOutput("summary3")
+      #verbatimTextOutput("numTimeSeries")
+
+
 
 
     )
