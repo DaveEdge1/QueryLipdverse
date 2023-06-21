@@ -60,6 +60,11 @@ server <- function(input, output, session) {
   })
 
 
+  updateSelectizeInput(session, "archiveType", choices = unique(queryTable$archiveType), server = TRUE)
+
+
+
+
   # yMin <- reactive({
   #   min(D()$geo_latitude)
   # })
@@ -210,7 +215,7 @@ ui <- fluidPage(
 
       selectizeInput(inputId = "archiveType",
                 label = "Archive Type:",
-                choices = unique(queryTable$archiveType),
+                choices = character(0),
                 multiple=TRUE),
 
       selectizeInput(inputId = "paleo.proxy",
@@ -294,7 +299,7 @@ ui <- fluidPage(
 
       #c(verbatimTextOutput("summaryHeaders")),
 
-
+      #DT::dataTableOutput("summary0"),
       DT::dataTableOutput("summary2")
 
       #verbatimTextOutput("numTimeSeries")
